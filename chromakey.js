@@ -207,3 +207,57 @@
   else { window.addEventListener('xrloaded', registerPipeline); }
 
 })();
+
+// ── 3) 핀치 줌 ──────────────────────────────────────────────────────────────
+(function () {
+  var MIN_SCALE = 0.3;
+  var MAX_SCALE = 3.0;
+
+  var pinching    = false;
+  var initDist    = 0;
+  var initScaleX  = 0;
+  var initScaleY  = 0;
+
+  function dist(t) {
+    var dx = t[0].clientX - t[1].clientX;
+    var dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function getMesh() {
+    if (!window.XR8) return null;
+    var xr = (XR8.CloudStudioThreejs && XR8.CloudStudioThreejs.xrScene)
+      ? XR8.CloudStudioThreejs.xrScene()
+      : (XR8.Threejs && XR8.Threejs.xrScene ? XR8.Threejs.xrScene() : null);
+    if (!xr || !xr.scene) return null;
+    var found = null;
+    xr.scene.traverse(function (obj) {
+      if (!found && obj.isMesh && obj.material && obj.material.uniforms) found = obj;
+    });
+    return found;
+  }
+
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 2) return;
+    var mesh = getMesh();
+    if (!mesh) return;
+    pinching   = true;
+    initDist   = dist(e.touches);
+    initScaleX = mesh.scale.x;
+    initScaleY = mesh.scale.y;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!pinching || e.touches.length !== 2) return;
+    var mesh = getMesh();
+    if (!mesh) return;
+    var ratio = dist(e.touches) / initDist;
+    var sx = Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScaleX * ratio));
+    var sy = Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScaleY * ratio));
+    mesh.scale.set(sx, sy, mesh.scale.z);
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (e.touches.length < 2) pinching = false;
+  }, { passive: true });
+})();
