@@ -159,6 +159,7 @@
 
             entry.anchor.position.copy(detail.position);
             entry.anchor.quaternion.copy(detail.rotation);
+            if (detail.scale) entry.anchor.scale.setScalar(detail.scale);
             entry.anchor.visible = true;
 
             entry.video.muted = false;
@@ -173,6 +174,7 @@
             if (!entry) return;
             entry.anchor.position.copy(e.detail.position);
             entry.anchor.quaternion.copy(e.detail.rotation);
+            if (e.detail.scale) entry.anchor.scale.setScalar(e.detail.scale);
           }
         },
         {
@@ -228,10 +230,13 @@
     if (!pinching || e.touches.length !== 2 || !pinchTarget) return;
     var entry = entries[pinchTarget];
     if (!entry) return;
-    var ratio = touchDist(e.touches) / initDist;
+    var rawRatio   = touchDist(e.touches) / initDist;
+    var maxRatio   = MAX_SCALE / Math.max(initScale.x, initScale.y);
+    var minRatio   = MIN_SCALE / Math.min(initScale.x, initScale.y);
+    var clampedRatio = Math.min(maxRatio, Math.max(minRatio, rawRatio));
     entry.mesh.scale.set(
-      Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScale.x * ratio)),
-      Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScale.y * ratio)),
+      initScale.x * clampedRatio,
+      initScale.y * clampedRatio,
       entry.mesh.scale.z
     );
   }, { passive: true });
