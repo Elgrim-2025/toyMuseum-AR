@@ -4,6 +4,7 @@
   "description": "",
   "main": "bundle.js",
   "scripts": {
+    "build": "mkdir -p dist && cp index.html bundle.js chromakey.js dist/ && cp -r external dist/ && cp -r assets dist/ && rm -f dist/assets/*.mp4",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
