@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/starwars_luminance.png",
+  "metadata": null,
+  "name": "starwars",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "starwars_original.png",
+    "croppedImage": "starwars_cropped.png",
+    "thumbnailImage": "starwars_thumbnail.png",
+    "luminanceImage": "starwars_luminance.png"
+  },
+  "created": 1776921935066,
+  "updated": 1776921935066
+}

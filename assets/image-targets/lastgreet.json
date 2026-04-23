@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/lastgreet_luminance.png",
+  "metadata": null,
+  "name": "lastgreet",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "lastgreet_original.png",
+    "croppedImage": "lastgreet_cropped.png",
+    "thumbnailImage": "lastgreet_thumbnail.png",
+    "luminanceImage": "lastgreet_luminance.png"
+  },
+  "created": 1776921837296,
+  "updated": 1776921837296
+}

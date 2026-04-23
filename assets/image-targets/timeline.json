@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/timeline_luminance.png",
+  "metadata": null,
+  "name": "timeline",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "timeline_original.png",
+    "croppedImage": "timeline_cropped.png",
+    "thumbnailImage": "timeline_thumbnail.png",
+    "luminanceImage": "timeline_luminance.png"
+  },
+  "created": 1776922012311,
+  "updated": 1776922012311
+}

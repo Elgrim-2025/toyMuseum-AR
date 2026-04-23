@@ -1,15 +1,23 @@
 // ── 1) 이미지 타겟 데이터 주입 ───────────────────────────────────────────────
 (function () {
-  var dataPromise = fetch('./assets/image-targets/greet.json')
-    .then(function (r) { return r.json(); })
-    .catch(function (e) { console.error('[IT] JSON 로드 실패:', e); return null; });
+  var TARGET_NAMES = [
+    'greet', 'timeline', 'Demon', 'super', 'starwars',
+    'Gundum', 'marvel', 'lego', 'lastgreet', 'eldran', 'DC'
+  ];
+
+  var dataPromises = TARGET_NAMES.map(function (name) {
+    return fetch('./assets/image-targets/' + name + '.json')
+      .then(function (r) { return r.json(); })
+      .catch(function (e) { console.error('[IT] 로드 실패:', name, e); return null; });
+  });
 
   function intercept() {
     var orig = XR8.XrController.configure.bind(XR8.XrController);
     XR8.XrController.configure = function (opts) {
       opts = opts || {};
-      dataPromise.then(function (data) {
-        if (data) { opts.imageTargetData = [data]; console.log('[IT] 타겟 주입:', data.name); }
+      Promise.all(dataPromises).then(function (list) {
+        opts.imageTargetData = list.filter(Boolean);
+        console.log('[IT] 타겟 주입:', opts.imageTargetData.map(function (d) { return d.name; }));
         orig(opts);
       });
     };
@@ -19,21 +27,36 @@
   else { window.addEventListener('xrloaded', intercept); }
 })();
 
-// ── 2) 크로마키 셰이더 ──────────────────────────────────────────────────────
+// ── 2) 멀티 타겟 크로마키 ────────────────────────────────────────────────────
 (function () {
   'use strict';
 
-  // ══ 설정값 ══════════════════════════════════════════════════════
+  // ══ 크로마키 설정 ══
   var KEY_R      = 0.0;
   var KEY_G      = 1.0;
   var KEY_B      = 0.0;
   var SIMILARITY = 0.35;
   var SMOOTHNESS = 0.08;
-  var SPILL      = 3.0;   // 녹색 번짐 억제 강도 (0.0 ~ 1.0)
-  // ════════════════════════════════════════════════════════════════
+  var SPILL      = 3.0;
 
-  // bundle.js 씬 데이터의 plane 엔티티 ID (이걸로 메시를 확실하게 찾음)
-  var PLANE_EID = 'ac088bbe-c677-4fc2-96a3-ed1601dd1df5';
+  // ══ 핀치줌 설정 ══
+  var MIN_SCALE = 0.3;
+  var MAX_SCALE = 3.0;
+
+  // ══ 타겟 → 영상 URL ══
+  var VIDEO_MAP = {
+    'greet':     'https://toyarassets.elgrim.kr/01.mp4',
+    'timeline':  'https://toyarassets.elgrim.kr/timeline.mp4',
+    'Demon':     'https://toyarassets.elgrim.kr/Demon.mp4',
+    'super':     'https://toyarassets.elgrim.kr/super-ranger.mp4',
+    'starwars':  'https://toyarassets.elgrim.kr/starwars.mp4',
+    'Gundum':    'https://toyarassets.elgrim.kr/robot.mp4',
+    'marvel':    'https://toyarassets.elgrim.kr/marvel.mp4',
+    'lego':      'https://toyarassets.elgrim.kr/lego.mp4',
+    'lastgreet': 'https://toyarassets.elgrim.kr/last.mp4',
+    'eldran':    'https://toyarassets.elgrim.kr/Eldran.mp4',
+    'DC':        'https://toyarassets.elgrim.kr/DC.mp4'
+  };
 
   var vertSrc =
     'varying vec2 vUv;' +
@@ -41,11 +64,8 @@
 
   var fragSrc =
     'precision mediump float;' +
-    'uniform sampler2D map;' +
-    'uniform vec3 keyColor;' +
-    'uniform float similarity;' +
-    'uniform float smoothness;' +
-    'uniform float spill;' +
+    'uniform sampler2D map;uniform vec3 keyColor;' +
+    'uniform float similarity;uniform float smoothness;uniform float spill;' +
     'varying vec2 vUv;' +
     'void main(){' +
     '  vec4 c=texture2D(map,vUv);' +
@@ -60,10 +80,9 @@
     '  gl_FragColor=vec4(c.rgb,a);' +
     '}';
 
-  var applied = false;
-  var planeMesh = null;
+  var entries = {};  // name → { anchor, video, mesh }
 
-  function getScene() {
+  function getXrScene() {
     if (!window.XR8) return null;
     if (XR8.CloudStudioThreejs && XR8.CloudStudioThreejs.xrScene)
       return XR8.CloudStudioThreejs.xrScene();
@@ -72,64 +91,25 @@
     return null;
   }
 
-  // ── 플레인 메시 탐색 (eid 우선, 폴백으로 VideoTexture 보유 메시) ─
-  function findPlaneMesh() {
-    if (planeMesh) return planeMesh;
-    var xr = getScene();
-    if (!xr || !xr.scene) return null;
+  function createEntry(name) {
+    var xr = getXrScene();
+    if (!xr || !window.THREE) { console.warn('[CK] scene 없음:', name); return null; }
 
-    var found = null;
-    xr.scene.traverse(function (obj) {
-      if (found || !obj.isMesh) return;
+    var vid = document.createElement('video');
+    vid.src = VIDEO_MAP[name] || '';
+    vid.loop = true;
+    vid.muted = true;
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', '');
+    vid.crossOrigin = 'anonymous';
+    vid.load();
 
-      // 1순위: 엔티티 ID 매칭
-      if (obj.userData && obj.userData.eid === PLANE_EID) {
-        found = obj;
-        console.log('[CK] 플레인 메시 발견 (eid 매칭)');
-        return;
-      }
-
-      // 2순위: video 텍스처 보유 메시
-      var mat = obj.material;
-      if (mat && mat.map && mat.map.image instanceof HTMLVideoElement) {
-        found = obj;
-        console.log('[CK] 플레인 메시 발견 (VideoTexture 매칭)');
-      }
-    });
-
-    planeMesh = found;
-    return found;
-  }
-
-  // ── 크로마키 셰이더 적용 ───────────────────────────────────────
-  function applyShader() {
-    if (applied) return;
-    if (!window.THREE) return;
-
-    var obj = findPlaneMesh();
-    if (!obj) return;
-
-    var mat = obj.material;
-
-    // 비디오 텍스처가 아직 로드되지 않았으면 재시도
-    if (!mat || !mat.map || !mat.map.image) {
-      console.log('[CK] 비디오 텍스처 대기 중...');
-      return;
-    }
-
-    var vid = mat.map.image;
-
-    // 씬 로드 시 자동재생 즉시 차단
-    vid.pause();
-    vid.currentTime = 0;
-
-    // VideoTexture 새로 생성 (매 프레임 자동 갱신 보장)
     var vTex = new THREE.VideoTexture(vid);
     vTex.minFilter = THREE.LinearFilter;
     vTex.magFilter = THREE.LinearFilter;
     vTex.generateMipmaps = false;
 
-    var newMat = new THREE.ShaderMaterial({
+    var mat = new THREE.ShaderMaterial({
       uniforms: {
         map:        { value: vTex },
         keyColor:   { value: new THREE.Color(KEY_R, KEY_G, KEY_B) },
@@ -137,8 +117,8 @@
         smoothness: { value: SMOOTHNESS },
         spill:      { value: SPILL }
       },
-      vertexShader:   vertSrc,
-      fragmentShader: fragSrc,
+      vertexShader:       vertSrc,
+      fragmentShader:     fragSrc,
       transparent:        true,
       depthWrite:         false,
       blending:           THREE.NormalBlending,
@@ -146,118 +126,117 @@
       side:               THREE.DoubleSide
     });
 
-    mat.dispose();
-    obj.material = newMat;
-    applied = true;
-    console.log('[CK] 크로마키 셰이더 적용 완료 ✓');
+    var mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+    mesh.scale.set(0.8, 1.2, 1.2);
+    mesh.position.set(0, 0.06, 0.3);
+
+    var anchor = new THREE.Object3D();
+    anchor.add(mesh);
+    anchor.visible = false;
+    xr.scene.add(anchor);
+
+    console.log('[CK] 엔트리 생성:', name);
+    return { anchor: anchor, video: vid, mesh: mesh };
   }
 
-  // ── Camera Pipeline Module ─────────────────────────────────────
+  function getOrCreate(name) {
+    if (!entries[name]) entries[name] = createEntry(name);
+    return entries[name];
+  }
+
   function registerPipeline() {
     XR8.addCameraPipelineModules([{
-      name: 'chromakey',
+      name: 'chromakey-multi',
 
       listeners: [
         {
           event: 'reality.imagefound',
           process: function (e) {
-            console.log('[CK] 이미지 인식:', e && e.detail && e.detail.name);
-            applyShader();
-            var obj = findPlaneMesh();
-            if (obj && obj.material && obj.material.uniforms) {
-              var vid = obj.material.uniforms.map.value.image;
-              vid.loop = true;
-              vid.muted = false;
-              vid.play().catch(function () {});
-            }
+            var name   = e.detail.name;
+            var detail = e.detail;
+            var entry  = getOrCreate(name);
+            if (!entry) return;
+
+            entry.anchor.position.copy(detail.position);
+            entry.anchor.quaternion.copy(detail.rotation);
+            entry.anchor.visible = true;
+
+            entry.video.muted = false;
+            entry.video.play().catch(function () {});
+            console.log('[CK] 인식:', name);
           }
         },
         {
           event: 'reality.imageupdated',
-          process: function () { applyShader(); }
+          process: function (e) {
+            var entry = entries[e.detail.name];
+            if (!entry) return;
+            entry.anchor.position.copy(e.detail.position);
+            entry.anchor.quaternion.copy(e.detail.rotation);
+          }
         },
         {
           event: 'reality.imagelost',
-          process: function () {
-            var obj = findPlaneMesh();
-            if (obj && obj.material && obj.material.uniforms) {
-              obj.material.uniforms.map.value.image.pause();
-            }
+          process: function (e) {
+            var entry = entries[e.detail.name];
+            if (!entry) return;
+            entry.anchor.visible = false;
+            entry.video.pause();
+            console.log('[CK] 소실:', e.detail.name);
           }
         }
       ],
 
-      onStart: function () {
-        console.log('[CK] pipeline onStart');
-        // 씬 준비까지 주기적으로 재시도
-        var n = 0;
-        var id = setInterval(function () {
-          applyShader();
-          if (applied || ++n >= 120) {
-            clearInterval(id);
-            if (!applied) console.warn('[CK] 60초 내 셰이더 적용 실패 — 콘솔 확인 필요');
-          }
-        }, 500);
-      }
+      onStart: function () { console.log('[CK] pipeline 시작'); }
     }]);
-    console.log('[CK] pipeline 등록 완료');
   }
 
   if (window.XR8) { registerPipeline(); }
   else { window.addEventListener('xrloaded', registerPipeline); }
 
-})();
-
-// ── 3) 핀치 줌 ──────────────────────────────────────────────────────────────
-(function () {
-  var MIN_SCALE = 0.3;
-  var MAX_SCALE = 3.0;
-
+  // ── 핀치줌 ──────────────────────────────────────────────────────────────────
   var pinching    = false;
   var initDist    = 0;
-  var initScaleX  = 0;
-  var initScaleY  = 0;
+  var initScale   = { x: 0, y: 0 };
+  var pinchTarget = null;
 
-  function dist(t) {
+  function touchDist(t) {
     var dx = t[0].clientX - t[1].clientX;
     var dy = t[0].clientY - t[1].clientY;
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-  function getMesh() {
-    if (!window.XR8) return null;
-    var xr = (XR8.CloudStudioThreejs && XR8.CloudStudioThreejs.xrScene)
-      ? XR8.CloudStudioThreejs.xrScene()
-      : (XR8.Threejs && XR8.Threejs.xrScene ? XR8.Threejs.xrScene() : null);
-    if (!xr || !xr.scene) return null;
-    var found = null;
-    xr.scene.traverse(function (obj) {
-      if (!found && obj.isMesh && obj.material && obj.material.uniforms) found = obj;
-    });
-    return found;
+  function getVisibleEntry() {
+    var keys = Object.keys(entries);
+    for (var i = 0; i < keys.length; i++) {
+      if (entries[keys[i]] && entries[keys[i]].anchor.visible) return keys[i];
+    }
+    return null;
   }
 
   document.addEventListener('touchstart', function (e) {
     if (e.touches.length !== 2) return;
-    var mesh = getMesh();
-    if (!mesh) return;
-    pinching   = true;
-    initDist   = dist(e.touches);
-    initScaleX = mesh.scale.x;
-    initScaleY = mesh.scale.y;
+    var name = getVisibleEntry();
+    if (!name) return;
+    pinchTarget = name;
+    pinching    = true;
+    initDist    = touchDist(e.touches);
+    initScale   = { x: entries[name].mesh.scale.x, y: entries[name].mesh.scale.y };
   }, { passive: true });
 
   document.addEventListener('touchmove', function (e) {
-    if (!pinching || e.touches.length !== 2) return;
-    var mesh = getMesh();
-    if (!mesh) return;
-    var ratio = dist(e.touches) / initDist;
-    var sx = Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScaleX * ratio));
-    var sy = Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScaleY * ratio));
-    mesh.scale.set(sx, sy, mesh.scale.z);
+    if (!pinching || e.touches.length !== 2 || !pinchTarget) return;
+    var entry = entries[pinchTarget];
+    if (!entry) return;
+    var ratio = touchDist(e.touches) / initDist;
+    entry.mesh.scale.set(
+      Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScale.x * ratio)),
+      Math.min(MAX_SCALE, Math.max(MIN_SCALE, initScale.y * ratio)),
+      entry.mesh.scale.z
+    );
   }, { passive: true });
 
   document.addEventListener('touchend', function (e) {
-    if (e.touches.length < 2) pinching = false;
+    if (e.touches.length < 2) { pinching = false; pinchTarget = null; }
   }, { passive: true });
 })();

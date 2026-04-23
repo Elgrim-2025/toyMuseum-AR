@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/DC_luminance.png",
+  "metadata": null,
+  "name": "DC",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "DC_original.png",
+    "croppedImage": "DC_cropped.png",
+    "thumbnailImage": "DC_thumbnail.png",
+    "luminanceImage": "DC_luminance.png"
+  },
+  "created": 1776921673023,
+  "updated": 1776921673023
+}

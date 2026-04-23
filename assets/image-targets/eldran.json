@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/eldran_luminance.png",
+  "metadata": null,
+  "name": "eldran",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "eldran_original.png",
+    "croppedImage": "eldran_cropped.png",
+    "thumbnailImage": "eldran_thumbnail.png",
+    "luminanceImage": "eldran_luminance.png"
+  },
+  "created": 1776921754848,
+  "updated": 1776921754848
+}

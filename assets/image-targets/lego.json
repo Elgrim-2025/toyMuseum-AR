@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/lego_luminance.png",
+  "metadata": null,
+  "name": "lego",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "lego_original.png",
+    "croppedImage": "lego_cropped.png",
+    "thumbnailImage": "lego_thumbnail.png",
+    "luminanceImage": "lego_luminance.png"
+  },
+  "created": 1776921872519,
+  "updated": 1776921872519
+}

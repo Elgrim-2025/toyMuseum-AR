@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/Gundum_luminance.png",
+  "metadata": null,
+  "name": "Gundum",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "Gundum_original.png",
+    "croppedImage": "Gundum_cropped.png",
+    "thumbnailImage": "Gundum_thumbnail.png",
+    "luminanceImage": "Gundum_luminance.png"
+  },
+  "created": 1776921797019,
+  "updated": 1776921797019
+}

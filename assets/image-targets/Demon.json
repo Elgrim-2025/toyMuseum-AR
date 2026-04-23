@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/Demon_luminance.png",
+  "metadata": null,
+  "name": "Demon",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "Demon_original.png",
+    "croppedImage": "Demon_cropped.png",
+    "thumbnailImage": "Demon_thumbnail.png",
+    "luminanceImage": "Demon_luminance.png"
+  },
+  "created": 1776921711373,
+  "updated": 1776921711373
+}

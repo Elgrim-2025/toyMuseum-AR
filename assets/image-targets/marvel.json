@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/marvel_luminance.png",
+  "metadata": null,
+  "name": "marvel",
+  "type": "PLANAR",
+  "properties": {
+    "left": 281,
+    "top": 0,
+    "width": 2392,
+    "height": 3189,
+    "isRotated": true,
+    "originalWidth": 2953,
+    "originalHeight": 3189
+  },
+  "resources": {
+    "originalImage": "marvel_original.png",
+    "croppedImage": "marvel_cropped.png",
+    "thumbnailImage": "marvel_thumbnail.png",
+    "luminanceImage": "marvel_luminance.png"
+  },
+  "created": 1776921905416,
+  "updated": 1776921905416
+}
