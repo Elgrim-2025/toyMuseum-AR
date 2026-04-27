@@ -52,7 +52,7 @@
     'starwars':  'https://toyarassets.elgrim.kr/starwars.mp4',
     'Gundum':    'https://toyarassets.elgrim.kr/robot.mp4',
     'marvel':    'https://toyarassets.elgrim.kr/marvel.mp4',
-    'lego':      'https://toyarassets.elgrim.kr/lego.mp4',
+    'lego':      'https://toyarassets.elgrim.kr/Lego.mp4',
     'lastgreet': 'https://toyarassets.elgrim.kr/last.mp4',
     'eldran':    'https://toyarassets.elgrim.kr/Eldran.mp4',
     'DC':        'https://toyarassets.elgrim.kr/DC.mp4'
@@ -244,4 +244,130 @@
   document.addEventListener('touchend', function (e) {
     if (e.touches.length < 2) { pinching = false; pinchTarget = null; }
   }, { passive: true });
+})();
+
+// ── 3) 사진 촬영 ────────────────────────────────────────────────────────────────
+(function () {
+  'use strict';
+
+  // 셔터 버튼
+  var btn = document.createElement('button');
+  btn.style.cssText =
+    'position:fixed;bottom:48px;left:50%;transform:translateX(-50%);' +
+    'width:72px;height:72px;border-radius:50%;' +
+    'background:#fff;' +
+    'border:4px solid rgba(255,255,255,0.35);' +
+    'box-shadow:0 0 0 4px rgba(255,255,255,0.15),0 6px 24px rgba(0,0,0,0.35);' +
+    'cursor:pointer;z-index:1000;outline:none;' +
+    'touch-action:manipulation;-webkit-tap-highlight-color:transparent;' +
+    'transition:transform .12s ease,box-shadow .12s ease,opacity .12s ease';
+  document.body.appendChild(btn);
+
+  // 플래시 오버레이
+  var flash = document.createElement('div');
+  flash.style.cssText =
+    'position:fixed;inset:0;background:#fff;opacity:0;' +
+    'pointer-events:none;z-index:998';
+  document.body.appendChild(flash);
+
+  var pendingCapture = false;
+
+  function doFlash() {
+    flash.style.transition = 'none';
+    flash.style.opacity = '0.9';
+    requestAnimationFrame(function () {
+      flash.style.transition = 'opacity 0.5s ease';
+      flash.style.opacity = '0';
+    });
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    var parts = dataUrl.split(',');
+    var mime = parts[0].match(/:(.*?);/)[1];
+    var binary = atob(parts[1]);
+    var arr = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
+  function savePhoto(dataUrl) {
+    var blob = dataUrlToBlob(dataUrl);
+    var file = new File([blob], 'ar-photo-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(function (e) {
+        if (e.name !== 'AbortError') openFallback(dataUrl);
+      });
+    } else if (!navigator.share) {
+      downloadFile(dataUrl);
+    } else {
+      openFallback(dataUrl);
+    }
+  }
+
+  function downloadFile(dataUrl) {
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'ar-photo-' + Date.now() + '.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function openFallback(dataUrl) {
+    var w = window.open('', '_blank');
+    if (w) w.document.write(
+      '<style>body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}</style>' +
+      '<img src="' + dataUrl + '" style="max-width:100%;max-height:100vh;display:block">'
+    );
+  }
+
+  function captureCanvas() {
+    var canvases = document.querySelectorAll('canvas');
+    var target = null;
+    var maxArea = 0;
+    canvases.forEach(function (c) {
+      if (c.width * c.height > maxArea) { maxArea = c.width * c.height; target = c; }
+    });
+    if (!target) { console.warn('[Photo] canvas 없음'); return; }
+    try {
+      var dataUrl = target.toDataURL('image/jpeg', 0.92);
+      savePhoto(dataUrl);
+    } catch (e) {
+      console.error('[Photo] 캡처 실패:', e);
+    }
+  }
+
+  function registerCapture() {
+    XR8.addCameraPipelineModules([{
+      name: 'photo-capture',
+      onProcessGpu: function () {
+        if (!pendingCapture) return;
+        pendingCapture = false;
+        captureCanvas();
+      }
+    }]);
+  }
+
+  if (window.XR8) { registerCapture(); }
+  else { window.addEventListener('xrloaded', registerCapture); }
+
+  btn.addEventListener('pointerdown', function () {
+    btn.style.transform = 'translateX(-50%) scale(0.88)';
+    btn.style.opacity = '0.75';
+    btn.style.boxShadow = '0 0 0 4px rgba(255,255,255,0.15),0 2px 10px rgba(0,0,0,0.2)';
+  });
+  btn.addEventListener('pointerup', function () {
+    btn.style.transform = 'translateX(-50%) scale(1)';
+    btn.style.opacity = '1';
+    btn.style.boxShadow = '0 0 0 4px rgba(255,255,255,0.15),0 6px 24px rgba(0,0,0,0.35)';
+  });
+  btn.addEventListener('pointercancel', function () {
+    btn.style.transform = 'translateX(-50%) scale(1)';
+    btn.style.opacity = '1';
+  });
+  btn.addEventListener('click', function () {
+    doFlash();
+    pendingCapture = true;
+  });
 })();
