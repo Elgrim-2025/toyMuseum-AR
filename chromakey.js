@@ -80,7 +80,9 @@
     '  gl_FragColor=vec4(c.rgb,a);' +
     '}';
 
-  var entries = {};  // name → { anchor, video, mesh }
+  var LOST_GRACE_MS = 2500;  // imagelost 후 실제로 숨기기까지 대기 시간(ms)
+
+  var entries = {};  // name → { anchor, video, mesh, lostTimer }
 
   function getXrScene() {
     if (!window.XR8) return null;
@@ -157,6 +159,7 @@
             var entry  = getOrCreate(name);
             if (!entry) return;
 
+            clearTimeout(entry.lostTimer);
             entry.anchor.position.copy(detail.position);
             entry.anchor.quaternion.copy(detail.rotation);
             if (detail.scale) entry.anchor.scale.setScalar(detail.scale);
@@ -172,6 +175,7 @@
           process: function (e) {
             var entry = entries[e.detail.name];
             if (!entry) return;
+            clearTimeout(entry.lostTimer);
             entry.anchor.position.copy(e.detail.position);
             entry.anchor.quaternion.copy(e.detail.rotation);
             if (e.detail.scale) entry.anchor.scale.setScalar(e.detail.scale);
@@ -182,9 +186,14 @@
           process: function (e) {
             var entry = entries[e.detail.name];
             if (!entry) return;
-            entry.anchor.visible = false;
-            entry.video.pause();
-            console.log('[CK] 소실:', e.detail.name);
+            var name = e.detail.name;
+            console.log('[CK] 소실 감지 (유예 중):', name);
+            clearTimeout(entry.lostTimer);
+            entry.lostTimer = setTimeout(function () {
+              entry.anchor.visible = false;
+              entry.video.pause();
+              console.log('[CK] 소실 확정:', name);
+            }, LOST_GRACE_MS);
           }
         }
       ],
