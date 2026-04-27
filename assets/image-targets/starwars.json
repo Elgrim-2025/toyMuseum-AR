@@ -1,5 +1,5 @@
 {
-  "imagePath": "image-targets/starwars_luminance.jpg",
+  "imagePath": "assets/image-targets/starwars_luminance.jpg",
   "metadata": null,
   "name": "starwars",
   "type": "PLANAR",

@@ -1,5 +1,5 @@
 {
-  "imagePath": "image-targets/greet_luminance.jpg",
+  "imagePath": "assets/image-targets/greet_luminance.jpg",
   "metadata": null,
   "name": "greet",
   "type": "PLANAR",

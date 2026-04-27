@@ -1,5 +1,5 @@
 {
-  "imagePath": "image-targets/DC_luminance.jpg",
+  "imagePath": "assets/image-targets/DC_luminance.jpg",
   "metadata": null,
   "name": "DC",
   "type": "PLANAR",
