@@ -137,7 +137,7 @@
     } else {
       mesh.scale.set(1.1, 1.5, 1.0);
     }
-    mesh.position.set(0, 0, 0);
+    mesh.position.set(0, 0, 0.35);
 
     var anchor = new THREE.Object3D();
     anchor.add(mesh);
