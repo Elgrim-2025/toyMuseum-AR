@@ -1,23 +1,23 @@
 {
-  "imagePath": "assets/image-targets/timeline_luminance.png",
+  "imagePath": "image-targets/timeline_luminance.jpg",
   "metadata": null,
   "name": "timeline",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
-    "top": 0,
-    "width": 2392,
-    "height": 3189,
-    "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
   },
   "resources": {
-    "originalImage": "timeline_original.png",
-    "croppedImage": "timeline_cropped.png",
-    "thumbnailImage": "timeline_thumbnail.png",
-    "luminanceImage": "timeline_luminance.png"
+    "originalImage": "timeline_original.jpg",
+    "croppedImage": "timeline_cropped.jpg",
+    "thumbnailImage": "timeline_thumbnail.jpg",
+    "luminanceImage": "timeline_luminance.jpg"
   },
-  "created": 1776922012311,
-  "updated": 1776922012311
+  "created": 1777276328858,
+  "updated": 1777276328858
 }

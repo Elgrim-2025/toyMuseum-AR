@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/game_luminance.jpg",
+  "metadata": null,
+  "name": "game",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
+  },
+  "resources": {
+    "originalImage": "game_original.jpg",
+    "croppedImage": "game_cropped.jpg",
+    "thumbnailImage": "game_thumbnail.jpg",
+    "luminanceImage": "game_luminance.jpg"
+  },
+  "created": 1777276631493,
+  "updated": 1777276631493
+}

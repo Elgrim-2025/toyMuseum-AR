@@ -1,23 +1,23 @@
 {
-  "imagePath": "assets/image-targets/Demon_luminance.png",
+  "imagePath": "image-targets/Demon_luminance.jpg",
   "metadata": null,
   "name": "Demon",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
-    "top": 0,
-    "width": 2392,
-    "height": 3189,
-    "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
   },
   "resources": {
-    "originalImage": "Demon_original.png",
-    "croppedImage": "Demon_cropped.png",
-    "thumbnailImage": "Demon_thumbnail.png",
-    "luminanceImage": "Demon_luminance.png"
+    "originalImage": "Demon_original.jpg",
+    "croppedImage": "Demon_cropped.jpg",
+    "thumbnailImage": "Demon_thumbnail.jpg",
+    "luminanceImage": "Demon_luminance.jpg"
   },
-  "created": 1776921711373,
-  "updated": 1776921711373
+  "created": 1777276358443,
+  "updated": 1777276358443
 }

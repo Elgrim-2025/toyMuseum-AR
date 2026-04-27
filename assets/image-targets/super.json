@@ -1,23 +1,23 @@
 {
-  "imagePath": "assets/image-targets/super_luminance.png",
+  "imagePath": "image-targets/super_luminance.jpg",
   "metadata": null,
   "name": "super",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
-    "top": 0,
-    "width": 2392,
-    "height": 3189,
-    "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
   },
   "resources": {
-    "originalImage": "super_original.png",
-    "croppedImage": "super_cropped.png",
-    "thumbnailImage": "super_thumbnail.png",
-    "luminanceImage": "super_luminance.png"
+    "originalImage": "super_original.jpg",
+    "croppedImage": "super_cropped.jpg",
+    "thumbnailImage": "super_thumbnail.jpg",
+    "luminanceImage": "super_luminance.jpg"
   },
-  "created": 1776921980514,
-  "updated": 1776921980514
+  "created": 1777276385360,
+  "updated": 1777276385360
 }

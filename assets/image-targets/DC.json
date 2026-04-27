@@ -1,23 +1,23 @@
 {
-  "imagePath": "assets/image-targets/DC_luminance.png",
+  "imagePath": "image-targets/DC_luminance.jpg",
   "metadata": null,
   "name": "DC",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
-    "top": 0,
-    "width": 2392,
-    "height": 3189,
-    "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
   },
   "resources": {
-    "originalImage": "DC_original.png",
-    "croppedImage": "DC_cropped.png",
-    "thumbnailImage": "DC_thumbnail.png",
-    "luminanceImage": "DC_luminance.png"
+    "originalImage": "DC_original.jpg",
+    "croppedImage": "DC_cropped.jpg",
+    "thumbnailImage": "DC_thumbnail.jpg",
+    "luminanceImage": "DC_luminance.jpg"
   },
-  "created": 1776921673023,
-  "updated": 1776921673023
+  "created": 1777276605875,
+  "updated": 1777276605875
 }

@@ -1,23 +1,23 @@
 {
-  "imagePath": "assets/image-targets/starwars_luminance.png",
+  "imagePath": "image-targets/starwars_luminance.jpg",
   "metadata": null,
   "name": "starwars",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
-    "top": 0,
-    "width": 2392,
-    "height": 3189,
-    "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
   },
   "resources": {
-    "originalImage": "starwars_original.png",
-    "croppedImage": "starwars_cropped.png",
-    "thumbnailImage": "starwars_thumbnail.png",
-    "luminanceImage": "starwars_luminance.png"
+    "originalImage": "starwars_original.jpg",
+    "croppedImage": "starwars_cropped.jpg",
+    "thumbnailImage": "starwars_thumbnail.jpg",
+    "luminanceImage": "starwars_luminance.jpg"
   },
-  "created": 1776921935066,
-  "updated": 1776921935066
+  "created": 1777276420476,
+  "updated": 1777276420476
 }

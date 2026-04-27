@@ -2,7 +2,8 @@
 (function () {
   var TARGET_NAMES = [
     'greet', 'timeline', 'Demon', 'super', 'starwars',
-    'Gundum', 'marvel', 'lego', 'lastgreet', 'eldran', 'DC'
+    'Gundum', 'marvel', 'lego', 'lastgreet', 'eldran', 'DC',
+    'game', 'harrypotter'
   ];
 
   var dataPromises = TARGET_NAMES.map(function (name) {
@@ -55,7 +56,9 @@
     'lego':      'https://toyarassets.elgrim.kr/Lego.mp4',
     'lastgreet': 'https://toyarassets.elgrim.kr/last.mp4',
     'eldran':    'https://toyarassets.elgrim.kr/Eldran.mp4',
-    'DC':        'https://toyarassets.elgrim.kr/DC.mp4'
+    'DC':          'https://toyarassets.elgrim.kr/DC.mp4',
+    'game':        'https://toyarassets.elgrim.kr/game.mp4',
+    'harrypotter': 'https://toyarassets.elgrim.kr/Harrypotter.mp4'
   };
 
   var vertSrc =
@@ -129,8 +132,12 @@
     });
 
     var mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
-    mesh.scale.set(0.8, 1.2, 1.2);
-    mesh.position.set(0, 0.06, 0.3);
+    if (name === 'harrypotter') {
+      mesh.scale.set(1.6, 0.9, 1.0);  // 16:9
+    } else {
+      mesh.scale.set(1.1, 1.5, 1.0);
+    }
+    mesh.position.set(0, 0, 0);
 
     var anchor = new THREE.Object3D();
     anchor.add(mesh);

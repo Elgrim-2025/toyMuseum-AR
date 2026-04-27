@@ -1,17 +1,23 @@
 {
-  "imagePath": "assets/image-targets/greet_luminance.jpg",
+  "imagePath": "image-targets/greet_luminance.jpg",
   "metadata": null,
   "name": "greet",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
+    "left": 260,
     "top": 0,
-    "width": 2392,
-    "height": 3189,
+    "width": 2215,
+    "height": 2953,
     "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "originalWidth": 2734,
+    "originalHeight": 2953
   },
-  "created": 1776918955259,
-  "updated": 1776918955259
+  "resources": {
+    "originalImage": "greet_original.jpg",
+    "croppedImage": "greet_cropped.jpg",
+    "thumbnailImage": "greet_thumbnail.jpg",
+    "luminanceImage": "greet_luminance.jpg"
+  },
+  "created": 1777276281460,
+  "updated": 1777276281460
 }

@@ -1,23 +1,23 @@
 {
-  "imagePath": "assets/image-targets/lastgreet_luminance.png",
+  "imagePath": "image-targets/lastgreet_luminance.jpg",
   "metadata": null,
   "name": "lastgreet",
   "type": "PLANAR",
   "properties": {
-    "left": 281,
+    "left": 260,
     "top": 0,
-    "width": 2392,
-    "height": 3189,
+    "width": 2215,
+    "height": 2953,
     "isRotated": true,
-    "originalWidth": 2953,
-    "originalHeight": 3189
+    "originalWidth": 2734,
+    "originalHeight": 2953
   },
   "resources": {
-    "originalImage": "lastgreet_original.png",
-    "croppedImage": "lastgreet_cropped.png",
-    "thumbnailImage": "lastgreet_thumbnail.png",
-    "luminanceImage": "lastgreet_luminance.png"
+    "originalImage": "lastgreet_original.jpg",
+    "croppedImage": "lastgreet_cropped.jpg",
+    "thumbnailImage": "lastgreet_thumbnail.jpg",
+    "luminanceImage": "lastgreet_luminance.jpg"
   },
-  "created": 1776921837296,
-  "updated": 1776921837296
+  "created": 1777276558767,
+  "updated": 1777276558767
 }

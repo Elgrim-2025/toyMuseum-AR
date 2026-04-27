@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/harrypotter_luminance.jpg",
+  "metadata": null,
+  "name": "harrypotter",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 89,
+    "width": 1240,
+    "height": 1653,
+    "isRotated": false,
+    "originalWidth": 1240,
+    "originalHeight": 1830
+  },
+  "resources": {
+    "originalImage": "harrypotter_original.jpg",
+    "croppedImage": "harrypotter_cropped.jpg",
+    "thumbnailImage": "harrypotter_thumbnail.jpg",
+    "luminanceImage": "harrypotter_luminance.jpg"
+  },
+  "created": 1777276659725,
+  "updated": 1777276659725
+}
