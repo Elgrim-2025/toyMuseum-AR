@@ -205,7 +205,20 @@
         }
       ],
 
-      onStart: function () { console.log('[CK] pipeline 시작'); }
+      onStart: function () {
+        console.log('[CK] pipeline 시작');
+        var overlay = document.getElementById('tap-overlay');
+        if (overlay && overlay.style.display !== 'none') {
+          overlay.style.opacity = '0';
+          setTimeout(function () { overlay.style.display = 'none'; }, 350);
+        }
+        var hint = document.getElementById('ar-hint');
+        if (hint && hint.style.opacity === '0') {
+          hint.style.opacity = '1';
+          setTimeout(function () { hint.style.opacity = '0'; }, 4000);
+          setTimeout(function () { hint.style.display = 'none'; }, 4700);
+        }
+      }
     }]);
   }
 
