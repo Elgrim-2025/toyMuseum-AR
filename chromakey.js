@@ -18,6 +18,7 @@
       opts = opts || {};
       Promise.all(dataPromises).then(function (list) {
         opts.imageTargetData = list.filter(Boolean);
+        opts.glContextConfig = Object.assign({ preserveDrawingBuffer: true }, opts.glContextConfig || {});
         console.log('[IT] 타겟 주입:', opts.imageTargetData.map(function (d) { return d.name; }));
         orig(opts);
       });
@@ -284,22 +285,60 @@
   btn.style.cssText =
     'position:fixed;bottom:48px;left:50%;transform:translateX(-50%);' +
     'width:72px;height:72px;border-radius:50%;' +
-    'background:#fff;' +
-    'border:4px solid rgba(255,255,255,0.35);' +
+    'background:#fff;border:4px solid rgba(255,255,255,0.35);' +
     'box-shadow:0 0 0 4px rgba(255,255,255,0.15),0 6px 24px rgba(0,0,0,0.35);' +
     'cursor:pointer;z-index:1000;outline:none;' +
     'touch-action:manipulation;-webkit-tap-highlight-color:transparent;' +
     'transition:transform .12s ease,box-shadow .12s ease,opacity .12s ease';
   document.body.appendChild(btn);
 
-  // 플래시 오버레이
+  // 플래시
   var flash = document.createElement('div');
-  flash.style.cssText =
-    'position:fixed;inset:0;background:#fff;opacity:0;' +
-    'pointer-events:none;z-index:998';
+  flash.style.cssText = 'position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:998';
   document.body.appendChild(flash);
 
+  // 사진 미리보기 오버레이
+  var previewOverlay = document.createElement('div');
+  previewOverlay.style.cssText =
+    'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.92);' +
+    'display:none;flex-direction:column;align-items:center;justify-content:center;gap:0';
+  document.body.appendChild(previewOverlay);
+
+  var previewImg = document.createElement('img');
+  previewImg.style.cssText =
+    'max-width:100%;max-height:70vh;object-fit:contain;display:block;border-radius:8px;';
+  previewOverlay.appendChild(previewImg);
+
+  var previewActions = document.createElement('div');
+  previewActions.style.cssText =
+    'display:flex;gap:12px;margin-top:24px;align-items:center;';
+  previewOverlay.appendChild(previewActions);
+
+  function makeActionBtn(label, primary) {
+    var b = document.createElement('button');
+    b.textContent = label;
+    b.style.cssText =
+      'padding:14px 28px;border-radius:40px;font-size:15px;font-family:sans-serif;font-weight:600;' +
+      'cursor:pointer;border:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;' +
+      (primary
+        ? 'background:#fff;color:#000;'
+        : 'background:rgba(255,255,255,0.15);color:#fff;');
+    return b;
+  }
+
+  var shareBtn  = makeActionBtn('저장 / 공유', true);
+  var closeBtn  = makeActionBtn('닫기', false);
+  previewActions.appendChild(shareBtn);
+  previewActions.appendChild(closeBtn);
+
+  var saveHint = document.createElement('p');
+  saveHint.style.cssText =
+    'color:rgba(255,255,255,0.45);font-family:sans-serif;font-size:12px;margin:12px 0 0;text-align:center;display:none';
+  saveHint.textContent = '이미지를 꾹 눌러 사진 앨범에 저장하세요';
+  previewOverlay.appendChild(saveHint);
+
   var pendingCapture = false;
+  var lastDataUrl    = null;
 
   function doFlash() {
     flash.style.transition = 'none';
@@ -311,45 +350,50 @@
   }
 
   function dataUrlToBlob(dataUrl) {
-    var parts = dataUrl.split(',');
-    var mime = parts[0].match(/:(.*?);/)[1];
+    var parts  = dataUrl.split(',');
+    var mime   = parts[0].match(/:(.*?);/)[1];
     var binary = atob(parts[1]);
-    var arr = new Uint8Array(binary.length);
+    var arr    = new Uint8Array(binary.length);
     for (var i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
     return new Blob([arr], { type: mime });
   }
 
-  function savePhoto(dataUrl) {
-    var blob = dataUrlToBlob(dataUrl);
-    var file = new File([blob], 'ar-photo-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+  function showPreview(dataUrl) {
+    lastDataUrl = dataUrl;
+    previewImg.src = dataUrl;
+    previewOverlay.style.display = 'flex';
+    saveHint.style.display = 'none';
+  }
 
+  function closePreview() {
+    previewOverlay.style.display = 'none';
+    previewImg.src = '';
+    lastDataUrl = null;
+  }
+
+  shareBtn.addEventListener('click', function () {
+    if (!lastDataUrl) return;
+    var blob = dataUrlToBlob(lastDataUrl);
+    var file = new File([blob], 'ar-photo-' + Date.now() + '.jpg', { type: 'image/jpeg' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file] }).catch(function (e) {
-        if (e.name !== 'AbortError') openFallback(dataUrl);
+        if (e.name !== 'AbortError') saveHint.style.display = 'block';
       });
-    } else if (!navigator.share) {
-      downloadFile(dataUrl);
+    } else if (navigator.share) {
+      navigator.share({ title: 'AR 사진', url: lastDataUrl }).catch(function () {
+        saveHint.style.display = 'block';
+      });
     } else {
-      openFallback(dataUrl);
+      var a = document.createElement('a');
+      a.href = lastDataUrl;
+      a.download = 'ar-photo-' + Date.now() + '.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
-  }
+  });
 
-  function downloadFile(dataUrl) {
-    var a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = 'ar-photo-' + Date.now() + '.jpg';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  function openFallback(dataUrl) {
-    var w = window.open('', '_blank');
-    if (w) w.document.write(
-      '<style>body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}</style>' +
-      '<img src="' + dataUrl + '" style="max-width:100%;max-height:100vh;display:block">'
-    );
-  }
+  closeBtn.addEventListener('click', closePreview);
 
   function captureCanvas() {
     var canvases = document.querySelectorAll('canvas');
@@ -361,9 +405,9 @@
     if (!target) { console.warn('[Photo] canvas 없음'); return; }
     try {
       var dataUrl = target.toDataURL('image/jpeg', 0.92);
-      savePhoto(dataUrl);
+      showPreview(dataUrl);
     } catch (e) {
-      console.error('[Photo] 캡처 실패:', e);
+      console.error('[Photo] 캡처 실패 (CORS?):', e);
     }
   }
 
