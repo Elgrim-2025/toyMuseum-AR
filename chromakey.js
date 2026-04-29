@@ -63,34 +63,6 @@
     'trans':       'https://toyarassets.elgrim.kr/trans.mp4'
   };
 
-  // ══ 비디오 미리 생성 (iOS 재생 권한 확보용) ══
-  var preloadedVideos = {};
-  Object.keys(VIDEO_MAP).forEach(function (name) {
-    var vid = document.createElement('video');
-    vid.crossOrigin = 'anonymous';  // src 전에 설정해야 CORS 정상 동작
-    vid.src = VIDEO_MAP[name];
-    vid.loop = true;
-    vid.muted = true;
-    vid.playsInline = true;
-    vid.setAttribute('playsinline', '');
-    vid.preload = 'auto';
-    vid.load();
-    preloadedVideos[name] = vid;
-  });
-
-  // ══ 첫 탭/클릭 시 모든 비디오 잠금 해제 (iOS autoplay 허용) ══
-  function unlockAllVideos() {
-    Object.keys(preloadedVideos).forEach(function (name) {
-      var vid = preloadedVideos[name];
-      vid.muted = true;
-      vid.play().then(function () {
-        vid.pause();
-        vid.currentTime = 0;
-      }).catch(function () {});
-    });
-  }
-  document.addEventListener('touchstart', unlockAllVideos, { once: true, capture: true });
-  document.addEventListener('click',      unlockAllVideos, { once: true, capture: true });
 
   var vertSrc =
     'varying vec2 vUv;' +
@@ -131,8 +103,14 @@
     var xr = getXrScene();
     if (!xr || !window.THREE) { console.warn('[CK] scene 없음:', name); return null; }
 
-    var vid = preloadedVideos[name];
-    if (!vid) return null;
+    var vid = document.createElement('video');
+    vid.crossOrigin = 'anonymous';
+    vid.src = VIDEO_MAP[name] || '';
+    vid.loop = true;
+    vid.muted = true;
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', '');
+    vid.load();
 
     var vTex = new THREE.VideoTexture(vid);
     vTex.minFilter = THREE.LinearFilter;
