@@ -88,8 +88,9 @@
 
   var LOST_GRACE_MS = 1000;  // imagelost 후 실제로 숨기기까지 대기 시간(ms)
 
-  var entries = {};      // name → { anchor, video, mesh, lostTimer }
+  var entries = {};      // name → { anchor, video, mesh, lostTimer, ready }
   var activeTarget = null;  // 현재 표시 중인 타겟 (단일 제어)
+  var targetLockUntil = 0;  // 타겟 전환 잠금 타임스탬프 (동시 인식 방지)
 
   // ── iOS 탭 재생 버튼 (autoplay 차단 시 표시) ────────────────────────────────
   var iosPlayBtn = document.createElement('button');
@@ -131,11 +132,13 @@
 
     var vid = document.createElement('video');
     vid.crossOrigin = 'anonymous';
-    vid.src = VIDEO_MAP[name] || '';
     vid.loop = true;
     vid.muted = true;
     vid.playsInline = true;
     vid.setAttribute('playsinline', '');
+    vid.setAttribute('preload', 'auto');
+    vid.setAttribute('webkit-playsinline', '');
+    vid.src = VIDEO_MAP[name] || '';
     vid.load();
 
     var vTex = new THREE.VideoTexture(vid);
@@ -176,7 +179,12 @@
     xr.scene.add(anchor);
 
     console.log('[CK] 엔트리 생성:', name);
-    return { anchor: anchor, video: vid, mesh: mesh };
+    var entryObj = { anchor: anchor, video: vid, mesh: mesh, ready: false };
+    vid.addEventListener('canplay', function () {
+      entryObj.ready = true;
+      console.log('[CK] 비디오 준비 완료:', name);
+    });
+    return entryObj;
   }
 
   function getOrCreate(name) {
@@ -194,8 +202,16 @@
           process: function (e) {
             var name   = e.detail.name;
             var detail = e.detail;
+            var now    = Date.now();
+
+            // 이미 다른 타겟이 활성화되어 있고, 잠금 시간 내면 무시
+            if (activeTarget && activeTarget !== name && now < targetLockUntil) {
+              console.log('[CK] 타겟 잠금 중, 무시:', name, '(활성:', activeTarget, ')');
+              return;
+            }
 
             activeTarget = name;
+            targetLockUntil = now + 500;  // 500ms 잠금
             hidePlayBtn();
 
             // 다른 모든 타겟 즉시 숨기기
@@ -204,6 +220,7 @@
                 clearTimeout(entries[k].lostTimer);
                 entries[k].anchor.visible = false;
                 entries[k].video.pause();
+                entries[k].video.currentTime = 0;
               }
             });
 
@@ -216,19 +233,33 @@
             if (detail.scale) entry.anchor.scale.setScalar(detail.scale);
             entry.anchor.visible = true;
 
-            // muted로 먼저 play (iOS autoplay 허용) → 성공 시 unmute
-            // currentTime 리셋 없음: seek가 iOS에서 hang 유발
-            entry.video.muted = true;
-            var p = entry.video.play();
-            if (p !== undefined) {
-              p.then(function () {
+            // iOS: 비디오가 준비될 때까지 기다린 후 재생
+            function tryPlay() {
+              if (activeTarget !== name) return;  // 이미 다른 타겟으로 전환됨
+              entry.video.muted = true;
+              var p = entry.video.play();
+              if (p !== undefined) {
+                p.then(function () {
+                  if (activeTarget === name) {
+                    entry.video.muted = false;
+                  } else {
+                    entry.video.pause();
+                  }
+                }).catch(function () {
+                  showPlayBtn(entry);
+                });
+              } else {
                 entry.video.muted = false;
-              }).catch(function () {
-                // muted play도 실패 → 탭 재생 버튼 표시
-                showPlayBtn(entry);
-              });
+              }
+            }
+
+            if (entry.ready) {
+              tryPlay();
             } else {
-              entry.video.muted = false;
+              entry.video.addEventListener('canplay', function onReady() {
+                entry.video.removeEventListener('canplay', onReady);
+                tryPlay();
+              });
             }
             console.log('[CK] 인식:', name);
           }
@@ -236,7 +267,10 @@
         {
           event: 'reality.imageupdated',
           process: function (e) {
-            var entry = entries[e.detail.name];
+            var name  = e.detail.name;
+            // 활성 타겟이 아닌 경우 위치 업데이트 무시
+            if (activeTarget !== name) return;
+            var entry = entries[name];
             if (!entry) return;
             clearTimeout(entry.lostTimer);
             entry.anchor.position.copy(e.detail.position);
