@@ -103,13 +103,18 @@
     'box-shadow:0 4px 20px rgba(0,0,0,0.35);touch-action:manipulation;';
   document.body.appendChild(iosPlayBtn);
 
-  function showPlayBtn(entry) {
+  function showPlayBtn(entry, soundOnly) {
+    iosPlayBtn.textContent = soundOnly ? '🔊  소리 켜기' : '▶  탭하여 재생';
     iosPlayBtn.style.display = 'block';
     iosPlayBtn.onclick = function () {
       entry.video.muted = false;
-      entry.video.play().then(function () {
+      var p = entry.video.play();
+      if (p !== undefined) {
+        p.then(function () { iosPlayBtn.style.display = 'none'; })
+         .catch(function () {});
+      } else {
         iosPlayBtn.style.display = 'none';
-      }).catch(function () {});
+      }
     };
   }
 
@@ -220,7 +225,6 @@
                 clearTimeout(entries[k].lostTimer);
                 entries[k].anchor.visible = false;
                 entries[k].video.pause();
-                entries[k].video.currentTime = 0;
               }
             });
 
@@ -233,23 +237,32 @@
             if (detail.scale) entry.anchor.scale.setScalar(detail.scale);
             entry.anchor.visible = true;
 
-            // iOS: 비디오가 준비될 때까지 기다린 후 재생
+            // 소리 있는 재생 먼저 시도 → 차단 시 무음 재생 + 소리 켜기 버튼
             function tryPlay() {
-              if (activeTarget !== name) return;  // 이미 다른 타겟으로 전환됨
-              entry.video.muted = true;
+              if (activeTarget !== name) return;
+              entry.video.muted = false;
               var p = entry.video.play();
               if (p !== undefined) {
                 p.then(function () {
-                  if (activeTarget === name) {
-                    entry.video.muted = false;
-                  } else {
-                    entry.video.pause();
-                  }
+                  if (activeTarget !== name) entry.video.pause();
                 }).catch(function () {
-                  showPlayBtn(entry);
+                  // 소리 있는 재생 차단 → 무음으로 재시도
+                  entry.video.muted = true;
+                  var p2 = entry.video.play();
+                  if (p2 !== undefined) {
+                    p2.then(function () {
+                      if (activeTarget !== name) {
+                        entry.video.pause();
+                      } else {
+                        showPlayBtn(entry, true);  // 무음 재생 중 → 소리 켜기 버튼
+                      }
+                    }).catch(function () {
+                      showPlayBtn(entry, false);  // 재생 자체 실패 → 탭 재생 버튼
+                    });
+                  } else {
+                    showPlayBtn(entry, false);
+                  }
                 });
-              } else {
-                entry.video.muted = false;
               }
             }
 
