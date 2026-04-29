@@ -63,6 +63,35 @@
     'trans':       'https://toyarassets.elgrim.kr/trans.mp4'
   };
 
+  // ══ 비디오 미리 생성 (iOS 재생 권한 확보용) ══
+  var preloadedVideos = {};
+  Object.keys(VIDEO_MAP).forEach(function (name) {
+    var vid = document.createElement('video');
+    vid.crossOrigin = 'anonymous';  // src 전에 설정해야 CORS 정상 동작
+    vid.src = VIDEO_MAP[name];
+    vid.loop = true;
+    vid.muted = true;
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', '');
+    vid.preload = 'auto';
+    vid.load();
+    preloadedVideos[name] = vid;
+  });
+
+  // ══ 첫 탭/클릭 시 모든 비디오 잠금 해제 (iOS autoplay 허용) ══
+  function unlockAllVideos() {
+    Object.keys(preloadedVideos).forEach(function (name) {
+      var vid = preloadedVideos[name];
+      vid.muted = true;
+      vid.play().then(function () {
+        vid.pause();
+        vid.currentTime = 0;
+      }).catch(function () {});
+    });
+  }
+  document.addEventListener('touchstart', unlockAllVideos, { once: true, capture: true });
+  document.addEventListener('click',      unlockAllVideos, { once: true, capture: true });
+
   var vertSrc =
     'varying vec2 vUv;' +
     'void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
@@ -85,7 +114,7 @@
     '  gl_FragColor=vec4(c.rgb,a);' +
     '}';
 
-  var LOST_GRACE_MS = 2500;  // imagelost 후 실제로 숨기기까지 대기 시간(ms)
+  var LOST_GRACE_MS = 1000;  // imagelost 후 실제로 숨기기까지 대기 시간(ms)
 
   var entries = {};  // name → { anchor, video, mesh, lostTimer }
 
@@ -102,14 +131,8 @@
     var xr = getXrScene();
     if (!xr || !window.THREE) { console.warn('[CK] scene 없음:', name); return null; }
 
-    var vid = document.createElement('video');
-    vid.src = VIDEO_MAP[name] || '';
-    vid.loop = true;
-    vid.muted = true;
-    vid.playsInline = true;
-    vid.setAttribute('playsinline', '');
-    vid.crossOrigin = 'anonymous';
-    vid.load();
+    var vid = preloadedVideos[name];
+    if (!vid) return null;
 
     var vTex = new THREE.VideoTexture(vid);
     vTex.minFilter = THREE.LinearFilter;
@@ -167,6 +190,16 @@
           process: function (e) {
             var name   = e.detail.name;
             var detail = e.detail;
+
+            // 다른 모든 타겟 즉시 숨기기 (관련 없는 영상 동시 출력 방지)
+            Object.keys(entries).forEach(function (k) {
+              if (k !== name && entries[k]) {
+                clearTimeout(entries[k].lostTimer);
+                entries[k].anchor.visible = false;
+                entries[k].video.pause();
+              }
+            });
+
             var entry  = getOrCreate(name);
             if (!entry) return;
 
@@ -176,8 +209,15 @@
             if (detail.scale) entry.anchor.scale.setScalar(detail.scale);
             entry.anchor.visible = true;
 
-            entry.video.muted = false;
-            entry.video.play().catch(function () {});
+            // iOS: muted로 play() 후 성공 시 unmute (사용자 제스처 없이도 재생 가능)
+            entry.video.muted = true;
+            entry.video.currentTime = 0;
+            var p = entry.video.play();
+            if (p && p.then) {
+              p.then(function () {
+                entry.video.muted = false;
+              }).catch(function () {});
+            }
             console.log('[CK] 인식:', name);
           }
         },
