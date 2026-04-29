@@ -136,6 +136,8 @@
     var mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
     if (name === 'harrypotter') {
       mesh.scale.set(1.6, 0.9, 1.0);  // 16:9
+    } else if (name === 'trans') {
+      mesh.scale.set(1.0, 1.5, 1.0);  // 2:3 (1280x1920)
     } else {
       mesh.scale.set(1.1, 1.5, 1.0);
     }
