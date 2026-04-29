@@ -88,7 +88,33 @@
 
   var LOST_GRACE_MS = 1000;  // imagelost 후 실제로 숨기기까지 대기 시간(ms)
 
-  var entries = {};  // name → { anchor, video, mesh, lostTimer }
+  var entries = {};      // name → { anchor, video, mesh, lostTimer }
+  var activeTarget = null;  // 현재 표시 중인 타겟 (단일 제어)
+
+  // ── iOS 탭 재생 버튼 (autoplay 차단 시 표시) ────────────────────────────────
+  var iosPlayBtn = document.createElement('button');
+  iosPlayBtn.textContent = '▶  탭하여 재생';
+  iosPlayBtn.style.cssText =
+    'position:fixed;bottom:140px;left:50%;transform:translateX(-50%);' +
+    'background:rgba(255,255,255,0.92);border:none;border-radius:28px;' +
+    'padding:14px 32px;font-size:16px;font-family:sans-serif;font-weight:700;' +
+    'color:#111;cursor:pointer;z-index:1001;display:none;' +
+    'box-shadow:0 4px 20px rgba(0,0,0,0.35);touch-action:manipulation;';
+  document.body.appendChild(iosPlayBtn);
+
+  function showPlayBtn(entry) {
+    iosPlayBtn.style.display = 'block';
+    iosPlayBtn.onclick = function () {
+      entry.video.muted = false;
+      entry.video.play().then(function () {
+        iosPlayBtn.style.display = 'none';
+      }).catch(function () {});
+    };
+  }
+
+  function hidePlayBtn() {
+    iosPlayBtn.style.display = 'none';
+  }
 
   function getXrScene() {
     if (!window.XR8) return null;
@@ -169,7 +195,10 @@
             var name   = e.detail.name;
             var detail = e.detail;
 
-            // 다른 모든 타겟 즉시 숨기기 (관련 없는 영상 동시 출력 방지)
+            activeTarget = name;
+            hidePlayBtn();
+
+            // 다른 모든 타겟 즉시 숨기기
             Object.keys(entries).forEach(function (k) {
               if (k !== name && entries[k]) {
                 clearTimeout(entries[k].lostTimer);
@@ -178,7 +207,7 @@
               }
             });
 
-            var entry  = getOrCreate(name);
+            var entry = getOrCreate(name);
             if (!entry) return;
 
             clearTimeout(entry.lostTimer);
@@ -187,14 +216,19 @@
             if (detail.scale) entry.anchor.scale.setScalar(detail.scale);
             entry.anchor.visible = true;
 
-            // iOS: muted로 play() 후 성공 시 unmute (사용자 제스처 없이도 재생 가능)
+            // muted로 먼저 play (iOS autoplay 허용) → 성공 시 unmute
+            // currentTime 리셋 없음: seek가 iOS에서 hang 유발
             entry.video.muted = true;
-            entry.video.currentTime = 0;
             var p = entry.video.play();
-            if (p && p.then) {
+            if (p !== undefined) {
               p.then(function () {
                 entry.video.muted = false;
-              }).catch(function () {});
+              }).catch(function () {
+                // muted play도 실패 → 탭 재생 버튼 표시
+                showPlayBtn(entry);
+              });
+            } else {
+              entry.video.muted = false;
             }
             console.log('[CK] 인식:', name);
           }
@@ -213,14 +247,19 @@
         {
           event: 'reality.imagelost',
           process: function (e) {
-            var entry = entries[e.detail.name];
+            var name  = e.detail.name;
+            var entry = entries[name];
             if (!entry) return;
-            var name = e.detail.name;
+            // 현재 표시 중인 타겟이 아니면 무시 (spurious lost 이벤트 차단)
+            if (activeTarget !== name) return;
             console.log('[CK] 소실 감지 (유예 중):', name);
             clearTimeout(entry.lostTimer);
             entry.lostTimer = setTimeout(function () {
+              if (activeTarget !== name) return;
               entry.anchor.visible = false;
               entry.video.pause();
+              activeTarget = null;
+              hidePlayBtn();
               console.log('[CK] 소실 확정:', name);
             }, LOST_GRACE_MS);
           }
