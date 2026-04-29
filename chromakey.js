@@ -3,7 +3,7 @@
   var TARGET_NAMES = [
     'greet', 'timeline', 'Demon', 'super', 'starwars',
     'Gundum', 'marvel', 'lego', 'lastgreet', 'eldran', 'DC',
-    'game', 'harrypotter'
+    'game', 'harrypotter', 'trans'
   ];
 
   var dataPromises = TARGET_NAMES.map(function (name) {
@@ -59,7 +59,8 @@
     'eldran':    'https://toyarassets.elgrim.kr/Eldran.mp4',
     'DC':          'https://toyarassets.elgrim.kr/DC.mp4',
     'game':        'https://toyarassets.elgrim.kr/game.mp4',
-    'harrypotter': 'https://toyarassets.elgrim.kr/Harrypotter.mp4'
+    'harrypotter': 'https://toyarassets.elgrim.kr/Harrypotter.mp4',
+    'trans':       'https://toyarassets.elgrim.kr/trans.mp4'
   };
 
   var vertSrc =
